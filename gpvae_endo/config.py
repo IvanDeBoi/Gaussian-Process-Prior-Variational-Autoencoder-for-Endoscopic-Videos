@@ -8,7 +8,7 @@ original code. This module reads such a file and turns it into two typed objects
 * :class:`ModelSettings` -- training details the model code uses: LR warm-up, KL ramp, loss weights,
   early stopping, LoRA, GAN, LPIPS resolution.
 
-**Important (kept from the original, finding B21):** the original model code imported its
+**Important (kept from the original):** the original model code imported its
 :class:`ModelSettings` values from ``config_endo.py`` directly, whatever ``--config`` said. To keep results
 identical, :func:`load_model_settings` still reads them from ``config_endo.py``. If the ``--config`` file
 sets one of them to a different value, a warning is printed, because that value is ignored. (All files in

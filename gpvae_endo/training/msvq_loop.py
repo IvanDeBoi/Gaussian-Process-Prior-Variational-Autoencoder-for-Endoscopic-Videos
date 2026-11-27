@@ -6,7 +6,7 @@ Differences from the VAE loop (:mod:`gpvae_endo.training.loop`), all kept from t
 * on the very first batch the codebook is filled with encoder outputs ("warm start");
 * the best epoch is chosen among *all* epochs (MSVQ has no KL term, so the loss is comparable throughout);
   its snapshot is a real copy. The original used ``.detach().cpu()``, which copies on a GPU but on the CPU
-  returns the live tensors (B2), so on the GPU nothing changes;
+  returns the live tensors, so on the GPU nothing changes;
 * the final latents are not computed after training.
 """
 from __future__ import annotations

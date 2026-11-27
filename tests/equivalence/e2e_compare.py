@@ -4,13 +4,13 @@ Both are run, each in its own empty working folder, on the same tiny synthetic v
 driver requires) with the same small config, on the CPU with one thread, twice:
 
 1. training from scratch (compared for information only: two runs of the original itself already differ
-   slightly at this size, finding T7; and the B2 fix may make the refactored run end with an earlier
+   slightly at this size; and the best-epoch fix may make the refactored run end with an earlier
    epoch's weights);
 2. loading the models the original saved in step 1 and evaluating them. This must be identical: the run
    logs and the ``Experiment_Summaries.txt`` tables are compared, ignoring clock times and absolute paths.
 
 The original driver is taken from a folder holding commit aaf8b6d (see ``record_legacy.py``), with ONE line
-changed: the denormalisation fix B1 (``[:, :, c]`` -> ``[..., c]``), because the refactored code fixes B1
+changed: the denormalisation fix (``[:, :, c]`` -> ``[..., c]``), because the refactored code fixes it
 on purpose and every metric depends on it.
 
     python tests/equivalence/e2e_compare.py <folder with the original code> <scratch folder>
@@ -85,7 +85,7 @@ def prepare_workdir(workdir: Path, npz: Path) -> Path:
 
 
 def patched_legacy(legacy: Path, scratch: Path) -> Path:
-    """A copy of the original code with only the B1 fix applied to its driver."""
+    """A copy of the original code with only the denormalisation fix applied to its driver."""
     dst = scratch / "legacy_b1"
     if dst.exists():
         shutil.rmtree(dst)
@@ -93,7 +93,7 @@ def patched_legacy(legacy: Path, scratch: Path) -> Path:
     driver = dst / "Latent_Space_Discovery.py"
     src = driver.read_text(encoding="utf-8")
     fixed, n = re.subn(r"(denormalised_arr|normalised_image)\[:, :, (\d)\]", r"\1[..., \2]", src)
-    assert n == 9, f"expected 9 B1 index expressions in the original denormalise(), found {n}"
+    assert n == 9, f"expected 9 ``[:, :, c]`` index expressions in the original denormalise(), found {n}"
     driver.write_text(fixed, encoding="utf-8")
     return driver
 
@@ -120,7 +120,7 @@ _VOLATILE = [
     (re.compile(r"\(\d+\.\d s\)"), "(<s>)"),
     (re.compile(r"\|\s+\d+\.\d{3}$"), "| <t/epoch>"),
 ]
-# lines only one side prints: the refactored code prints the duplicate train FID once (finding B8)
+# lines only one side prints: the refactored code prints the duplicate train FID once
 _SKIP = ("WARNING: these values in the --config file are ignored", "WARNING: no CUDA GPU found")
 
 
@@ -136,7 +136,7 @@ def normalise(text: str) -> list[str]:
 
 
 def drop_first_duplicate_fid(lines: list[str]) -> list[str]:
-    """The original computes and prints the training-set FID twice in a row (B8); keep the second."""
+    """The original computes and prints the training-set FID twice in a row; keep the second."""
     out, i = [], 0
     marker = "Computing FID on"
     while i < len(lines):
@@ -173,7 +173,7 @@ def main(argv) -> int:
     new_env = {"PYTHONPATH": str(REPO)}
 
     # 1. train from scratch with both. Informational only: on this CPU even two runs of the ORIGINAL differ
-    #    in the 6th-7th significant digit (finding T7), so training is compared bit for bit by the tiny
+    #    in the 6th-7th significant digit, so training is compared bit for bit by the tiny
     #    runs in tests/test_equivalence.py instead.
     old_dir, new_dir = scratch / "train_original", scratch / "train_refactored"
     procs = [start([sys.executable, str(driver), "--config", str(prepare_workdir(old_dir, npz))], old_dir, {}),

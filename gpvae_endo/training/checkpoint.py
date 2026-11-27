@@ -23,9 +23,9 @@ this order: the model constructed as usual (construction consumes random numbers
 existing modules* (the optimiser holds references to them), optimiser state, both LR schedulers, progress
 tracker, best-epoch bookkeeping and loss histories, and finally all RNG states.
 
-The best-epoch snapshot (``best_state``) is stored with the checkpoint. Since the B2 fix it is a real copy,
+The best-epoch snapshot (``best_state``) is stored with the checkpoint. Since the best-epoch fix it is a real copy,
 so its values are simply saved. :func:`pack_snapshot` / :func:`unpack_snapshot` still recognise a tensor
-that *is* the live tensor and re-link it on resume (the original's aliasing, finding B2), so a snapshot of
+that *is* the live tensor and re-link it on resume (the original's aliasing), so a snapshot of
 either kind survives a resume unchanged.
 
 Checkpoints are loaded with ``torch.load(weights_only=False)``: they hold numpy RNG states and arrays.

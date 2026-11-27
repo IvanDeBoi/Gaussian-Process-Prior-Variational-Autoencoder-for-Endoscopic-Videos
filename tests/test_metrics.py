@@ -1,4 +1,4 @@
-"""Denormalisation (finding B1, fixed) and the image metrics built on it."""
+"""Denormalisation (fixed per colour channel) and the image metrics built on it."""
 from __future__ import annotations
 
 import numpy as np
@@ -14,7 +14,7 @@ def _expected(x):
 
 
 def test_batch_of_frames_is_denormalised_per_colour_channel():
-    """B1: the original indexed ``[:, :, c]``, which on a batch (N, H, W, C) is the *width* axis of frame
+    """The original indexed ``[:, :, c]``, which on a batch (N, H, W, C) is the *width* axis of frame
     rows, so only a 3-pixel-wide strip was denormalised and the rest stayed zero. Every metric used it."""
     x = np.random.default_rng(0).standard_normal((5, 12, 12, 3)).astype(np.float32)
     out = Denormaliser(MEANS, STDS)(x)

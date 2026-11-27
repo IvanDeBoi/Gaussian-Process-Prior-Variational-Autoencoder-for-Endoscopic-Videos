@@ -94,7 +94,7 @@ def split_frames(video: VideoData, cfg: "ExperimentConfig") -> Split:
 
     * ``MUST_USE_GAP_FOR_TEST``: a block of ``GAP_SIZE`` consecutive frames in the middle of the video;
     * otherwise ``PERCENTAGE_FOR_TEST`` % random frames (fixed ``random_state=42``, so the same test frames
-      for every seed; finding P7);
+      for every seed, as in the original);
     * plus the last ``PERCENTAGE_FOR_TAIL`` % of the video.
     """
     x, Y, M = video.x, video.Y, video.M

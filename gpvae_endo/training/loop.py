@@ -1,7 +1,7 @@
 """The training loop of the VAE-family models (VAE, GPVAE_Casale, GPVAE_HPA, GPVAE_SPA).
 
 ``model.train()`` calls :func:`train_vae`. The loop is the original ``VAEModel.train`` (only ``self``
-became ``model``), plus optional checkpointing, with two changes: the best-epoch restore works (B2, see
+became ``model``), plus optional checkpointing, with two changes: the best-epoch restore works (see
 below), and the loss sums stay on the GPU instead of being read back after every step (same numbers,
 faster). Per epoch:
 
@@ -12,10 +12,11 @@ faster). Per epoch:
 4. stop early if the loss has not improved for a while; step the LR schedule.
 
 At the end the best-epoch weights are loaded back and every frame is encoded once more to get the final
-latents ``model.Z``. "Best" = lowest average training loss (B11: still the training loss) among the epochs
-that use the full KL weight ``max_beta``. In the original the snapshot held *references* to the live
-weights, so the "restore" silently kept the last epoch (finding B2); it is now a real copy on the CPU. When
-training ends before the KL weight reaches its maximum, there is no snapshot and the last epoch is kept.
+latents ``model.Z``. "Best" = lowest average training loss (as in the original; there is no validation
+loss) among the epochs that use the full KL weight ``max_beta``. In the original the snapshot held
+*references* to the live weights, so the "restore" silently kept the last epoch; it is now a real copy on
+the CPU. When training ends before the KL weight reaches its maximum, there is no snapshot and the last
+epoch is kept.
 
 With a :class:`~gpvae_endo.training.checkpoint.CheckpointConfig` the loop also saves its full state at
 epoch boundaries and resumes from it; without one it behaves exactly as the original.
@@ -164,7 +165,7 @@ def train_vae(model, checkpoint: Optional[CheckpointConfig] = None) -> None:
             history[f"loss_{k}_list"].append(ep[k])
         history["loss_adv_d_list"].append(ep["adv_d"])
 
-        # Best epoch (B2 fixed): a real copy, and only among epochs with the full KL weight. Before that the
+        # Best epoch (fixed): a real copy, and only among epochs with the full KL weight. Before that the
         # KL weight is still 0 or ramping, so those losses are lower for that reason alone and would always win.
         if beta >= model.max_beta and ep["total"] < best_loss:
             best_loss = ep["total"]
@@ -206,7 +207,7 @@ def train_vae(model, checkpoint: Optional[CheckpointConfig] = None) -> None:
     if best_state is None and any(loss < float("inf") for loss in history["loss_total_list"]):
         # No epoch with the full KL weight (a short run): keep the last epoch. The original still "restored"
         # here (its snapshot followed the live weights), and that restore has side effects worth keeping:
-        # GP models build a new GP object, which draws random numbers (B15). So restore the current state.
+        # GP models build a new GP object, which draws random numbers. So restore the current state.
         best_state = {k: v for k, v in model.state_dict_full().items() if "list" not in k}
     if best_state is not None:
         model.load_state_dict_full(best_state)

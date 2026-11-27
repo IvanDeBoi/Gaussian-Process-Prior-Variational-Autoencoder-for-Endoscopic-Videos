@@ -1,7 +1,7 @@
 """Choosing the device (GPU or CPU) for training.
 
-The original code silently fell back to the CPU when no CUDA GPU was found (finding B10). On a cluster
-that turns a few hours of GPU work into days of CPU work without anyone noticing. Now a missing GPU stops
+The original code silently fell back to the CPU when no CUDA GPU was found. That can
+turn a few hours of GPU work into days of CPU work without anyone noticing. Now a missing GPU stops
 the run with a clear message, unless the environment variable ``GPVAE_ALLOW_CPU=1`` says the CPU is
 wanted (for example for a small test on a laptop). With a GPU nothing changes.
 """

@@ -4,15 +4,15 @@ Each case trains a tiny model on synthetic frames on the CPU (1 thread, seed 0) 
 (losses, log lines, learning rates, every weight's norm, final latents, saved keys, encode/decode outputs,
 random state afterwards) with the one the original code produced (``equivalence/legacy_reference.json``).
 
-One intended difference: bug B2 is fixed, so a model now ends with the weights of its best epoch, where the
-original always kept the last epoch's. Therefore:
+One intended difference: the best-epoch restore is fixed, so a model now ends with the weights of its best
+epoch, where the original always kept the last epoch's. Therefore:
 
 * the training itself (losses, log lines, learning rates, random state) must always equal the original;
 * the final weights must be exactly those of the best eligible epoch (recorded during the run);
 * when that best epoch is the last one, the *whole* fingerprint must equal the original.
 
 Exact equality for every model except GPVAE_HPA: its KL is computed with a faster formula that agrees with
-the original to float rounding (finding T2), which then propagates through training at the 1e-6 level.
+the original to float rounding, which then propagates through training at the 1e-6 level.
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def test_matches_original(case, monkeypatch):
     assert same_weights(weights(recorder.model), recorder.epoch_weights[best]), \
         f"final weights are not those of the best epoch {best}"
 
-    if best != last:  # B2 fix: only the training trajectory can be compared with the original
+    if best != last:  # best-epoch fix: only the training trajectory can be compared with the original
         expected = {k: v for k, v in expected.items() if k in TRAJECTORY_KEYS}
         got = {k: v for k, v in got.items() if k in TRAJECTORY_KEYS}
     rtol = TOLERANCE.get(case, 0.0)
@@ -59,8 +59,8 @@ def test_matches_original(case, monkeypatch):
 
 @pytest.mark.parametrize("case", ["VAE_EndoVAE", "HPA_EndoVAE", "SPA_EndoVAE", "MSVQ"])
 def test_best_epoch_is_restored(case, monkeypatch):
-    """B2: make the last epoch's loss look worse (x10) so it cannot be the best; the model must then end with
-    an earlier epoch's weights, not the last ones."""
+    """Best-epoch fix: make the last epoch's loss look worse (x10) so it cannot be the best; the model must
+    then end with an earlier epoch's weights, not the last ones."""
     recorder = EpochRecorder(monkeypatch)
     epochs = harness.CASES[case][3]
 
@@ -88,7 +88,7 @@ def test_best_epoch_is_restored(case, monkeypatch):
 
 
 def test_casale_still_fails_when_kl_switches_on():
-    """Finding B9 is kept: GPVAE_Casale's KL term does not accept the loop's arguments."""
+    """Kept from the original: GPVAE_Casale's KL term does not accept the loop's arguments."""
     torch.set_num_threads(harness.THREADS)
     harness.seed_all(0)
     args = harness.model_args("GPVAE_Casale", "EndoVAEEnc", "EndoVAEDec", epochs=3)

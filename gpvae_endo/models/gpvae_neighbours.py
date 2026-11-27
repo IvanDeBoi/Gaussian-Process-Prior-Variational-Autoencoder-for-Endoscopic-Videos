@@ -5,7 +5,7 @@ only look at each frame's ``n_neighbors`` nearest frames in time (fixed at const
 
 * **HPA** -- KL between the encoder's distribution over the block {frame, its neighbours} and the GP prior
   restricted to that block. The block's latents are the *detached* encodings refreshed once per epoch
-  (``refresh_epoch_state``), so this KL trains the GP hyper-parameters only (finding B4).
+  (``refresh_epoch_state``), so this KL trains the GP hyper-parameters only (kept from the original).
 * **SPA** -- KL between the encoder's distribution for the frame and the GP *conditional* given its
   neighbours' (detached) latents.
 
@@ -181,7 +181,7 @@ class GPVAEHPAModel(NeighbourGPVAEModel):
         Faster than the original: K_loc is shared by all Q latent dimensions of a block and the encoder
         covariance S = diag(s2) is diagonal, so tr(K^-1 S) = sum_k diag(K^-1)_k * s2_k and mu^T K^-1 mu is
         one contraction with K^-1. The original copied the Cholesky factor once per latent dimension
-        (Q x the memory). Same value up to float rounding (about 1e-7 relative; finding T2).
+        (Q x the memory). Same value up to float rounding (about 1e-7 relative).
         """
         b = batch_idx.size(0)
         block_global = torch.cat([batch_idx.unsqueeze(1), self.neighbour_idx[batch_idx]], dim=1)  # (b, k)
@@ -211,8 +211,8 @@ class GPVAEHPAModel(NeighbourGPVAEModel):
         return kl_gp
 
     def load_state_dict_full(self, state):
-        # Casale's loader already builds a new GP; the original HPA loader builds a second one (finding B15:
-        # 6 numpy draws in total). Kept, because it moves the random state the evaluation then uses.
+        # Casale's loader already builds a new GP; the original HPA loader builds a second one
+        # (6 numpy draws in total). Kept, because it moves the random state the evaluation then uses.
         super().load_state_dict_full(state)
         self._load_neighbour_state(state)
         self.gp_prior = self._new_gp()

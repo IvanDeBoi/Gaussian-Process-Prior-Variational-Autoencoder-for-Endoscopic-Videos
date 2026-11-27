@@ -25,7 +25,8 @@ from gpvae_endo.training.checkpoint import (
 )
 from gpvae_endo.utils.io import atomic_save
 
-# Cases that cross warm-up, the KL ramp and the cosine schedule (Casale only in warm-up, finding B9).
+# Cases that cross warm-up, the KL ramp and the cosine schedule (Casale only in warm-up: after it, its KL
+# term raises a TypeError).
 RESUME_CASES = ["VAE_EndoVAE", "HPA_EndoVAE", "SPA_EndoVAE", "Casale_EndoVAE", "MSVQ"]
 
 # Parts of the fingerprint that only describe the process that printed them: the resumed process prints
@@ -135,7 +136,8 @@ def test_atomic_save_keeps_old_file_when_writing_fails(tmp_path):
 
 
 def test_snapshot_aliasing_survives_a_checkpoint():
-    """Finding B2 is kept: a best-state entry that still *is* the live tensor is re-linked on resume."""
+    """The original's aliasing is still handled: a best-state entry that still *is* the live tensor is
+    re-linked on resume."""
     live = {"encoder": {"w": torch.ones(2), "b": torch.zeros(2)}}
     snapshot = {"encoder": {"w": live["encoder"]["w"], "b": live["encoder"]["b"].clone()}}
     packed = pack_snapshot(snapshot, live)

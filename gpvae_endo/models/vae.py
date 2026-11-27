@@ -123,7 +123,7 @@ class VAEModel(AdversarialMixin, nn.Module):
         self.latent_dim = latent_dim
         self.underlying_method = underlying_method
         self.batch_size = batch_size
-        self.device = resolve_device(device)  # "gpu" without a GPU stops unless GPVAE_ALLOW_CPU=1 (B10)
+        self.device = resolve_device(device)  # "gpu" without a GPU stops unless GPVAE_ALLOW_CPU=1
 
         self.img_H = img_H
         self.img_W = img_W or img_H
@@ -389,7 +389,7 @@ class VAEModel(AdversarialMixin, nn.Module):
         total_count = 0
         for start in range(0, recon_ds.size(0), chunk_size):
             end = min(start + chunk_size, recon_ds.size(0))
-            # tanh of standardised pixels, as in the original (finding B7: LPIPS expects RGB in [-1, 1]).
+            # tanh of standardised pixels, as in the original (LPIPS expects RGB in [-1, 1]).
             recon_lp = torch.tanh(recon_ds[start:end])
             with torch.no_grad():
                 x_lp = torch.tanh(x_ds[start:end])

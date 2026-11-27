@@ -1,4 +1,4 @@
-"""The faster GPVAE_HPA KL formula gives the same value as the original one (finding T2).
+"""The faster GPVAE_HPA KL formula gives the same value as the original one, up to float rounding.
 
 ``original_hpa_kl`` below is the original code (commit aaf8b6d, ``Models/GPVAE_HPA_model.py``), copied
 verbatim apart from taking the model as an argument. It copies the Cholesky factor once per latent

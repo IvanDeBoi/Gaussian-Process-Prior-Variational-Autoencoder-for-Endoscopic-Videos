@@ -9,10 +9,10 @@ fill in missing frames) and :meth:`get_prior_covariance` (for plots). GPVAE_HPA 
 
 Kept from the original on purpose (results must not change):
 
-* finding B9: :meth:`compute_kl_term` does not accept the extra arguments the training loop passes, so
+* :meth:`compute_kl_term` does not accept the extra arguments the training loop passes, so
   GPVAE_Casale raises a ``TypeError`` as soon as the KL weight becomes non-zero (after the warm-up);
-* finding B3: the optimiser is rebuilt here with every encoder group at ``lr`` (the LoRA LR is dropped);
-* finding B15: :meth:`load_state_dict_full` builds a new GP (3 numpy random draws) and the optimiser keeps
+* the optimiser is rebuilt here with every encoder group at ``lr`` (the LoRA LR is dropped);
+* :meth:`load_state_dict_full` builds a new GP (3 numpy random draws) and the optimiser keeps
   pointing at the old one.
 """
 from __future__ import annotations
@@ -56,7 +56,8 @@ class GPVAECasaleModel(VAEModel):
         self.kernel_gp_prior = kernel_gp_prior
         self.gp_prior = self._new_gp()
 
-        # Rebuild the optimiser with the GP hyper-parameters at 10x the LR (encoder groups at `lr`: B3).
+        # Rebuild the optimiser with the GP hyper-parameters at 10x the LR (encoder groups at `lr`, LoRA LR
+        # dropped, as in the original).
         gp_lr = 10.0 * lr
         base_kernel = self.gp_prior.covar_module.base_kernel
         ls_params = [base_kernel.raw_lengthscale if hasattr(base_kernel, "raw_lengthscale") else base_kernel.lengthscale]
@@ -130,7 +131,7 @@ class GPVAECasaleModel(VAEModel):
         """Exact GP KL over all frames (re-encodes every frame on each step).
 
         No ``**kwargs`` on purpose: the training loop passes ``Xb_norm`` and ``batch_idx``, so this raises a
-        TypeError once the KL weight is non-zero, exactly like the original (finding B9).
+        TypeError once the KL weight is non-zero, exactly like the original.
         """
         self.encoder.eval()
         if self.backbone_feats is not None and hasattr(self.encoder, "encode_from_feats_batched"):
@@ -277,7 +278,7 @@ class GPVAECasaleModel(VAEModel):
         self.kernel_gp_prior = state.get("kernel_gp_prior", self.kernel_gp_prior)
         self.mu_all = state.get("mu_all", self.mu_all)
         self.loss_adv_d_list = state.get("loss_adv_d_list", [])
-        self.gp_prior = self._new_gp()  # a new GP object (finding B15), as in the original
+        self.gp_prior = self._new_gp()  # a new GP object, as in the original
         if state.get("gp_prior", None) is not None:
             self.gp_prior.load_state_dict(state["gp_prior"])
         if self.use_decoder_gan and self.discriminator is not None and state.get("discriminator") is not None:

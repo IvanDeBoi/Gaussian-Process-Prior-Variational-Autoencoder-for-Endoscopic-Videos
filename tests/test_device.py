@@ -1,4 +1,4 @@
-"""No silent CPU fallback (finding B10): without a GPU the run stops unless GPVAE_ALLOW_CPU=1."""
+"""No silent CPU fallback: without a GPU the run stops unless GPVAE_ALLOW_CPU=1."""
 from __future__ import annotations
 
 import pytest

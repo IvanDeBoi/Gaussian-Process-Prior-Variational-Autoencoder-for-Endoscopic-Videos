@@ -1,4 +1,4 @@
-"""Record every epoch's weights during a tiny training run, to check which epoch the model ends with (B2).
+"""Record every epoch's weights during a tiny training run, to check which epoch the model ends with.
 
 The recorder hooks ``ProgressTracker.check_stop_criterion``, which both training loops call once per epoch,
 right after the best-epoch snapshot and before the learning-rate step: the weights at that moment are the

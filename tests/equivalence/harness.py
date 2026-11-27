@@ -6,7 +6,7 @@ The same runs are made twice:
   ``legacy_reference.json``;
 * once with the refactored package, by ``tests/test_equivalence.py``.
 
-On the CPU with one thread these runs are bit-reproducible (finding T4), so the two fingerprints must be
+On the CPU with one thread these runs are bit-reproducible, so the two fingerprints must be
 equal to the last bit. This file only *reads* model attributes, so it works with both code versions.
 
 What a fingerprint holds: the per-epoch losses, the printed per-epoch log lines, the learning rates of
@@ -44,7 +44,7 @@ TINY_SETTINGS = {
 }
 
 # name -> (model kind, encoder, decoder, epochs, extra settings). Casale only during warm-up: once the KL
-# switches on it crashes with a TypeError in the original (finding B9), which is preserved and tested
+# switches on it crashes with a TypeError in the original, which is preserved and tested
 # separately.
 CASES = {
     "VAE_EndoVAE": ("VAE", "EndoVAEEnc", "EndoVAEDec", 8, {}),

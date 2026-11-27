@@ -85,7 +85,7 @@ class MSVQVAEModel(nn.Module):
         self.epochs = epochs
         self.lr = lr
         self.batch_size = batch_size
-        self.device = resolve_device(device)  # "gpu" without a GPU stops unless GPVAE_ALLOW_CPU=1 (B10)
+        self.device = resolve_device(device)  # "gpu" without a GPU stops unless GPVAE_ALLOW_CPU=1
 
         self.img_H = img_H
         self.img_W = img_W or img_H

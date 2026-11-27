@@ -99,7 +99,7 @@ def run(config_path: Optional[str] = None, checkpoints: Optional[CheckpointOptio
     print(f"MUST_USE_LPIPS: {cfg.must_use_lpips}")
     print(f"MUST_USE_DECODER_GAN: {cfg.must_use_decoder_gan}")
     print(f"MUST_RECONSTRUCT_GAP: {cfg.must_use_gap_for_test}")
-    require_gpu_or_allowed_cpu()  # fail fast, before loading the data (finding B10)
+    require_gpu_or_allowed_cpu()  # fail fast, before loading the data
     if checkpoints.enabled:
         print(f"Checkpoints: on (every {checkpoints.interval_s:.0f} s; "
               f"SLURM_JOB_END_TIME={os.environ.get('SLURM_JOB_END_TIME', 'not set')})")

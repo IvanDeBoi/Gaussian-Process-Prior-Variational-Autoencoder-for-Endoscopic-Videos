@@ -354,7 +354,7 @@ def _fid_section(r, cfg, kind, Y_train_denorm, Y_train_img_denorm, Y_test_denorm
 
     device = cfg.device
     print("Denormalise all decoded images and calculate FID")
-    # The original computed the train FID twice (finding B8) and printed it twice. Building the FID
+    # The original computed the train FID twice and printed it twice. Building the FID
     # network draws torch random numbers, so one network is still built and discarded here to keep the
     # random state (and so the next model's initial weights) the same; computing the duplicate value is
     # skipped (it does not touch the random state and its result was never used).

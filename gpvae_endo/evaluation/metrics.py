@@ -10,7 +10,7 @@ Masks are ``(N, H*W)`` with 1 = valid pixel, 0 = ignored (specular highlight / b
 Everything here is moved verbatim from the original driver (``Latent_Space_Discovery.py``), with one
 intended fix: ``Denormaliser`` indexes the colour channel with ``[..., c]``. The original wrote
 ``arr[:, :, c]``, which for an ``(N, H, W, C)`` batch selects *pixel columns* 0-2 instead of the colour
-channels, so every post-training metric was computed on a 3-pixel-wide strip (bug B1). For a single
+channels, so every post-training metric was computed on a 3-pixel-wide strip. For a single
 ``(H, W, C)`` image both forms are identical, so plots and videos are unchanged.
 """
 from __future__ import annotations
@@ -42,7 +42,7 @@ class Denormaliser:
     def __call__(self, normalised_image: np.ndarray) -> np.ndarray:
         out = np.zeros_like(normalised_image)
         for c in range(3):
-            # B1 fix: `[..., c]` is the colour channel for one image (H, W, C) *and* for a batch (N, H, W, C).
+            # Fixed: `[..., c]` is the colour channel for one image (H, W, C) *and* for a batch (N, H, W, C).
             # Same two-step float arithmetic as the original (multiply, then add in place).
             out[..., c] = normalised_image[..., c] * self.stds[c]
             out[..., c] += self.means[c]
@@ -97,7 +97,7 @@ def masked_mse(Y_original, Y_predicted, M, img_shape):
 
 
 def masked_psnr_from_flat(Y_original, Y_predicted, M, img_shape, data_range=1.0):
-    """PSNR from the masked MSE. Note: the frames are *not* clipped to [0, 1] first (finding P6)."""
+    """PSNR from the masked MSE. Note: the frames are *not* clipped to [0, 1] first (as in the original)."""
     mse = masked_mse(Y_original, Y_predicted, M, img_shape)
     if mse == 0.0:
         return float("inf")
@@ -165,7 +165,7 @@ def ssim_from_denorm(Y_real_denorm, Y_pred_denorm, M, img_shape, device, data_ra
 # FID
 # --------------------------------------------------------------------------------------------------------
 def to_uint8_chw(arr: np.ndarray) -> torch.Tensor:
-    """(N, H, W, 3) in [0, 1] -> uint8 (N, 3, H, W). Truncates rather than rounds, as the original (B20)."""
+    """(N, H, W, 3) in [0, 1] -> uint8 (N, 3, H, W). Truncates rather than rounds, as the original."""
     arr_u8 = (np.clip(arr, 0.0, 1.0) * 255).astype(np.uint8)
     return torch.from_numpy(arr_u8).permute(0, 3, 1, 2)
 

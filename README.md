@@ -9,6 +9,14 @@ model can decode a frame from its frame number alone. That is how it fills in fr
 (missing, held-out or corrupted ones), while a valid-pixel mask keeps specular highlights out of the
 reconstruction loss.
 
+<p align="center">
+  <img src="docs/figures/overview.jpg" alt="Pipeline: endoscopic video with DUCK-Net mask and missing frames, encoder (EndoVAE CNN or GastroNet ViT), GP prior over each latent dimension with imputed points and uncertainty in the gap, decoder, restored frames with per-frame uncertainty and camera path estimation" width="900">
+</p>
+
+*Overview (graphical abstract of the paper). Masked or missing frames are encoded where available; the GP
+prior over each latent dimension fills the gap from the frame numbers, with an uncertainty band; the decoder
+turns the latents back into frames.*
+
 ---
 
 ## Quick start
@@ -146,6 +154,13 @@ The run writes the outputs described in [Outputs](#10-outputs):
 A video is a set of frames $y_1, \dots, y_N$ with frame numbers $x_1, \dots, x_N$. Each frame has a latent
 vector $z_i \in \mathbb{R}^Q$ ($Q$ = `LATENT_DIM`, 256 by default).
 
+<p align="center">
+  <img src="docs/figures/model.jpg" alt="Encoder q(Z|Y) maps frames to latent points z_i, which follow a GP over their timestamps t_i; decoder p(Y|Z) maps them back to frames" width="750">
+</p>
+
+*The model (paper, Fig. 1). The encoder maps each frame to a latent point; a GP prior over the timestamps
+couples the latents of neighbouring frames; the decoder maps the latents back to frames.*
+
 | Part | Definition |
 |---|---|
 | Encoder (inference network) | $q(z_i \mid y_i) = \mathcal{N}(\mu_\phi(y_i), \operatorname{diag}\sigma^2_\phi(y_i))$ |
@@ -206,6 +221,15 @@ $$\bar z_{*,q} = K_{*x}\,(K_{xx} + \sigma_n^2 I)^{-1}\,\mu_{:,q}, \qquad
 
 The decoder turns $\bar z_*$ into a frame. This is how held-out frames are reconstructed without ever being
 seen. The posterior variance is the same for every latent dimension. It is plotted as an uncertainty band.
+
+<p align="center">
+  <img src="docs/figures/latent_trajectories.jpg" alt="3-D PCA projections of VAE and GPVAE_SPA latent trajectories for the nine C3VD videos; time-encoded points coloured by relative GP posterior uncertainty, highest inside the held-out 10-frame gap" width="750">
+</p>
+
+*Image-encoded vs time-encoded latents (paper, Fig. 8): 3-D PCA projections for `VAE` and `GPVAE_SPA`
+(`EndoVAEEnc` + `EndoVAEDec`) on the nine C3VD videos, with a contiguous 10-frame gap held out. The squares
+are latents predicted from the frame number alone. They follow the image-encoded trajectory, and their
+GP uncertainty (yellow = low, red = high, scaled per video) rises inside the gap.*
 
 ---
 
@@ -307,6 +331,10 @@ Each video is one NPZ file, `Data/<video> 336 X Ym01sGM.npz`:
 
 The mask is the union of the enabled detectors (DUCK-Net speculars by default; banding, blur, threshold
 specular and over-exposure detectors exist but are switched off). Mask previews go to `Resulting_Masks/`.
+The DUCK-Net detector (`scripts/utils/MaskPixels.py:detect_specular_ducknet`) pads the frame with reflected
+borders, runs the network at 256 × 256 and flags pixels with probability > 0.1. It also flags pixels with
+grayscale intensity > 225, which the network can miss, and dilates the combined mask with a 5 × 5 kernel
+twice. The second column of the figure in [Evaluation](#5-evaluation) shows the resulting masks in blue.
 
 ### Train/test split (`data/dataset.py:split_frames`)
 
@@ -374,6 +402,15 @@ is set.
 Both paths run on training (`tr`) and test (`te`) frames. **`te_t` is the main metric**: it measures how
 well the model reconstructs frames it never saw, from their position in time alone.
 
+<p align="center">
+  <img src="docs/figures/test_split.jpg" alt="Left: time-encoded test RMSE rises from about 0.020-0.023 at 10% to 0.031-0.037 at 60% held-out frames. Right: mean GP posterior uncertainty on the held-out frames for the same six GP-VAE configurations" width="800">
+</p>
+
+*Held-out frames vs test percentage (paper, Fig. 3), averaged over the nine C3VD videos. Left: `te_t` RMSE
+of the six GP-VAE configurations at 10–60 % held-out frames. Right: their mean GP posterior uncertainty on
+the held-out frames. Its level depends on the learned kernel hyper-parameters, so compare it within one
+configuration, not across configurations.*
+
 Metrics (`evaluation/metrics.py`) are computed on frames denormalised to RGB in [0, 1]. With
 `MUST_USE_MASK`, they cover only the valid pixels.
 
@@ -392,6 +429,15 @@ Each model also gets the following outputs:
 - the prior covariance (optional);
 - comparison images and a side-by-side MP4 (original | original with mask | reconstruction);
 - every reconstructed frame as a PNG (`MUST_RECONSTRUCT_ALL`).
+
+<p align="center">
+  <img src="docs/figures/reconstructions.jpg" alt="Frame 50 of each of the nine C3VD videos: original, masked frame (mask in blue), VAE reconstruction, GPVAE-HPA reconstruction, and their difference map with a magnified 64x64 region" width="650">
+</p>
+
+*Frame 50 of each C3VD video (paper, Fig. 2). Columns: original frame, valid-pixel mask (invalid pixels in
+blue), `VAE` reconstruction, `GPVAE_HPA` reconstruction (both `EndoVAEEnc` + `EndoVAEDec`), and the
+difference between the two reconstructions, scaled per video. The cyan box marks the 64 × 64 region where
+the two reconstructions differ most; it is magnified in the insets. The `VAE` reconstructions are blurrier.*
 
 Evaluation runs its steps in a fixed order, because some of them draw random numbers, which affects the
 initialisation of the next model in the same run.
@@ -425,6 +471,7 @@ configs/pretrained.py          configs/experiment.py, but loads the models in Sa
 Latent_Space_Discovery.py      alternative entry point; wraps gpvae_endo.pipeline.run
 scripts/                       make_npz.py, prepare_dataset.py, parse_experiment_summaries.py,
                                utils/ (one-off analysis and plotting scripts)
+docs/figures/                  figures from the paper, used in this README
 tests/                         pytest suite
 ```
 

@@ -1,0 +1,12 @@
+# Shell and Slurm scripts run on Linux: always LF, also in a Windows checkout (core.autocrlf=true would
+# otherwise give CRLF, and bash then fails on "$'\r': command not found").
+slurm/*.slurm text eol=lf
+*.sh text eol=lf
+slurm/environment.yaml text eol=lf
+slurm/*.txt text eol=lf
+
+# Sample data: one NPZ per dataset in Data/c3vd, Data/kvasir, Data/hyperkvasir (300 MB-1.5 GB each; GitLab Free
+# refuses files >= 100 MiB in a normal push, so they go through Git LFS).
+Data/c3vd/*.npz filter=lfs diff=lfs merge=lfs -text
+Data/kvasir/*.npz filter=lfs diff=lfs merge=lfs -text
+Data/hyperkvasir/*.npz filter=lfs diff=lfs merge=lfs -text

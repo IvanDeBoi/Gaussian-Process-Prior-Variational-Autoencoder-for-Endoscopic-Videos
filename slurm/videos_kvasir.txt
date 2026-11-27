@@ -1,0 +1,13 @@
+# Kvasir-Capsule: 9 videos chosen by the user (metadata_selected.json, 2026-11-19). Each video uses its
+# longest "Normal clean mucosa" segment, whole (first..last inclusive, 0-based video frame numbers), like
+# C3VD, where each video is one short continuous clean recording. Columns: dataset name source first last.
+# slurm/prepare.slurm skips these comment lines: array index 0 = the first video line.
+kvasir kvasir_df6b47bafe5143f5 $VSC_SCRATCH/videos/kvasir/df6b47bafe5143f5.mp4 2479 2883
+kvasir kvasir_4560e83f9afc4685 $VSC_SCRATCH/videos/kvasir/4560e83f9afc4685.mp4 6502 7209
+kvasir kvasir_fe5d372e43f94f68 $VSC_SCRATCH/videos/kvasir/fe5d372e43f94f68.mp4 2250 2781
+kvasir kvasir_d7a271f233ba4a40 $VSC_SCRATCH/videos/kvasir/d7a271f233ba4a40.mp4 10808 11175
+kvasir kvasir_07c1fa15a20a4398 $VSC_SCRATCH/videos/kvasir/07c1fa15a20a4398.mp4 1353 1765
+kvasir kvasir_3c8d5f0b90d7475d $VSC_SCRATCH/videos/kvasir/3c8d5f0b90d7475d.mp4 10923 11427
+kvasir kvasir_0728084c8da942d9 $VSC_SCRATCH/videos/kvasir/0728084c8da942d9.mp4 22803 23237
+kvasir kvasir_7ad22d50ebaf4596 $VSC_SCRATCH/videos/kvasir/7ad22d50ebaf4596.mp4 12362 12631
+kvasir kvasir_b2134f4a6f864613 $VSC_SCRATCH/videos/kvasir/b2134f4a6f864613.mp4 3771 4167

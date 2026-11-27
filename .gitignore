@@ -1,0 +1,104 @@
+# GP-VAE Endo: keep only code, configs and docs in git.
+# Folder patterns start with **/ so they also match if the code moves into a subfolder.
+
+# --- Data (21 GB: preprocessed .npz videos, raw frames, C3VD sheets) ---
+/Data/*
+# ...but not the code package gpvae_endo/data/ (on Windows, git ignores case, so **/Data/ matched it too)
+!gpvae_endo/data/
+# ...except exactly one sample NPZ per dataset (stored with Git LFS, see .gitattributes); everything else
+# in Data/ and in these three folders stays ignored
+!/Data/c3vd/
+!/Data/kvasir/
+!/Data/hyperkvasir/
+/Data/c3vd/*
+/Data/kvasir/*
+/Data/hyperkvasir/*
+*.npz
+!/Data/c3vd/c1_descending_t1_v2 336 X Ym01sGM.npz
+!/Data/kvasir/kvasir_7ad22d50ebaf4596 336 X Ym01sGM.npz
+!/Data/hyperkvasir/hyperkvasir-camera_a_b2c2110b-4047-4b5f-aaa4-0e2cc4ace9ed_ 336 X Ym01sGM.npz
+*.npy
+*.h5
+*.hdf5
+*.mp4
+*.avi
+*.mov
+
+# --- Pretrained and trained weights (2.1 GB) ---
+**/Models/Weights/
+/weights/
+**/Saved_Models/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+
+# --- Outputs written by runs (config_endo.py: FOLDER_LOGS/OUTPUT/DEBUG/MODELS) ---
+**/Logs/
+**/Pics/
+**/Debug/
+**/Resulting_Masks/
+**/tmp/
+**/test_percentage_rmse_analysis/
+**/runs/
+**/outputs/
+**/wandb/
+**/lightning_logs/
+
+# --- Experiment records (appended by the driver; results, not code) ---
+**/Experiment_Summaries.txt
+**/Experiment log.txt
+**/Experiment log trajectories.txt
+*.xlsx
+
+# --- Camera-calibration images (118 MB of .tiff); Calib_Cam.m and .mat params stay ---
+**/Utils/Cam_Calib/cfhq190l_10x10mm_checkerboard_images*/
+*.tiff
+*.tif
+
+# --- HPC / Slurm job output ---
+slurm-*.out
+slurm-*.err
+*.out
+*.err
+
+# --- Dead code kept locally ---
+**/Trash/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyc.*
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+.cache/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Local working notes (Claude Code guidance, plan, progress log) ---
+/CLAUDE.md
+/IMPLEMENTATION_PLAN.md
+/IMPLEMENTATION_PROGRESS.md
+
+# --- Golden-run outputs (reference.json next to them is tracked) ---
+tests/golden/out/
+docs/review_scripts/out/
+
+# --- Editors and OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Cluster job lists (made on the cluster by slurm/make_job_list.py) and upload archives ---
+slurm/jobs/
+slurm/logs/
+/*.tar
+/*.tar.gz

@@ -1,0 +1,65 @@
+[project]
+name = "gpvae-endo"
+version = "0.1.0"
+description = "Gaussian Process prior VAE for endoscopic video reconstruction (De Boi et al., arXiv 2606.19908)"
+readme = "README.md"
+# Ivan's environment and the planned HPC container both use Python 3.12; torch 2.7.1 has no 3.14+ wheels.
+requires-python = ">=3.12,<3.13"
+# Versions pinned where the original Windows environment (old requirements.txt) recorded them.
+dependencies = [
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+    "gpytorch==1.14.2",
+    "lpips==0.1.4",
+    "torchmetrics==1.8.2",
+    "torch-fidelity==0.4.0",
+    "numpy==2.2.6",
+    "scipy",
+    "scikit-learn",
+    "scikit-image",
+    "opencv-python-headless==4.12.0.88",
+    "matplotlib==3.10.6",
+    "plotly",
+    "imageio",
+    "pillow",
+    "huggingface-hub",
+]
+
+[project.optional-dependencies]
+# Only needed by some scripts in scripts/utils/ (intrinsic dimension, summaries).
+analysis = [
+    "pandas",
+    "scikit-dimension",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
+[tool.uv]
+# Not installed as a package: run from the repository folder (`uv run python -m gpvae_endo run ...`).
+package = false
+
+# CUDA 12.6 wheels: available for Windows and Linux, so the laptop and the A100 nodes use the same build.
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu126" }]
+torchvision = [{ index = "pytorch-cu126" }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "slow: needs the DINOv2 weights and minutes of CPU time; skip with -m \"not slow\"",
+]
+filterwarnings = [
+    "ignore:.*pretrained.*deprecated:UserWarning",
+    "ignore:Arguments other than a weight enum:UserWarning",
+    "ignore:The `evaluate` method is deprecated:DeprecationWarning",
+    "ignore:xFormers is not available:UserWarning",
+]

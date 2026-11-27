@@ -10,9 +10,8 @@ Masks are ``(N, H*W)`` with 1 = valid pixel, 0 = ignored (specular highlight / b
 Everything here is moved verbatim from the original driver (``Latent_Space_Discovery.py``), with one
 intended fix: ``Denormaliser`` indexes the colour channel with ``[..., c]``. The original wrote
 ``arr[:, :, c]``, which for an ``(N, H, W, C)`` batch selects *pixel columns* 0-2 instead of the colour
-channels, so every post-training metric was computed on a 3-pixel-wide strip (bug B1 in
-``docs/findings.md``). For a single ``(H, W, C)`` image both forms are identical, so plots and videos are
-unchanged.
+channels, so every post-training metric was computed on a 3-pixel-wide strip (bug B1). For a single
+``(H, W, C)`` image both forms are identical, so plots and videos are unchanged.
 """
 from __future__ import annotations
 

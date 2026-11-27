@@ -57,9 +57,7 @@
 *.tiff
 *.tif
 
-# --- HPC / Slurm job output ---
-slurm-*.out
-slurm-*.err
+# --- Job output ---
 *.out
 *.err
 
@@ -97,8 +95,10 @@ docs/review_scripts/out/
 Thumbs.db
 desktop.ini
 
-# --- Cluster job lists (made on the cluster by slurm/make_job_list.py) and upload archives ---
-slurm/jobs/
-slurm/logs/
+# --- Local only: cluster job scripts and internal review notes ---
+/slurm/
+/docs/findings.md
+
+# --- Upload archives ---
 /*.tar
 /*.tar.gz

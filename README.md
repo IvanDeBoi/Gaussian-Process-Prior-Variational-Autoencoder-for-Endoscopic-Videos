@@ -54,7 +54,7 @@ that is not in the paper:
 | Dataset | Video names |
 |---|---|
 | C3VD | `c1_ascending_t1_v1`, `c1_descending_t1_v2`, `c1_descending_t2_v3`, `c1_rectum_t2_v2`, `c1_rectum_t4_v3`, `c1_transverse2_t1_v2`, `c2_cecum_t3_v2`, `c2_sigmoid_t2_v2`, `c2_transverse2_t1_v3` |
-| Kvasir-Capsule | `kvasir_0728084c8da942d9`, `kvasir_07c1fa15a20a4398`, `kvasir_3c8d5f0b90d7475d`, `kvasir_4560e83f9afc4685`, `kvasir_7ad22d50ebaf4596`, `kvasir_b2134f4a6f864613`, `kvasir_d7a271f233ba4a40`, `kvasir_df6b47bafe5143f5`, `kvasir_fe5d372e43f94f68` |
+| Kvasir-Capsule | `kvasir_0728084c8da942d9`, `kvasir_07c1fa15a20a4398`, `kvasir_3c8d5f0b90d7475d`, `kvasir_4560e83f9afc4685`, `kvasir_7ad22d50ebaf4596`, `kvasir_b2134f4a6f864613`, `kvasir_d7a271f233ba4a40`, `kvasir_df6b47bafe5143f5`, `kvasir_fe5d372e43f94f68` (frame ranges below) |
 
 Each video becomes one data file, `Data/<video> 336 X Ym01sGM.npz`, made with `scripts/make_npz.py`:
 
@@ -66,7 +66,22 @@ Each video becomes one data file, `Data/<video> 336 X Ym01sGM.npz`, made with `s
   ```
 
 - **Kvasir-Capsule:** download the videos from [the Kvasir-Capsule dataset](https://osf.io/dv2ag/). Each of
-  the 9 videos uses the frame range in `slurm/videos_kvasir.txt`, for example:
+  the 9 videos uses its longest "Normal clean mucosa" segment, whole (0-based video frame numbers,
+  first and last included):
+
+  | Video | `--first` | `--last` |
+  |---|---|---|
+  | `df6b47bafe5143f5` | 2479 | 2883 |
+  | `4560e83f9afc4685` | 6502 | 7209 |
+  | `fe5d372e43f94f68` | 2250 | 2781 |
+  | `d7a271f233ba4a40` | 10808 | 11175 |
+  | `07c1fa15a20a4398` | 1353 | 1765 |
+  | `3c8d5f0b90d7475d` | 10923 | 11427 |
+  | `0728084c8da942d9` | 22803 | 23237 |
+  | `7ad22d50ebaf4596` | 12362 | 12631 |
+  | `b2134f4a6f864613` | 3771 | 4167 |
+
+  For example:
 
   ```bash
   uv run python scripts/make_npz.py --video 7ad22d50ebaf4596.mp4 --first 12362 --last 12631 --name kvasir_7ad22d50ebaf4596 --out Data
@@ -77,28 +92,27 @@ More about the data files is in [Data](#3-data).
 ### 4. Train and evaluate
 
 Train and evaluate the 9 combinations (`VAE`, `GPVAE_HPA`, `GPVAE_SPA` × `EndoVAEEnc`, `GastroEnc`,
-`GaLoRaEnc`) on one video, with the settings in `configs/hpc.py` (300 epochs, 20 % of the frames held out as
+`GaLoRaEnc`) on one video, with the settings in `configs/experiment.py` (300 epochs, 20 % of the frames held out as
 test frames, seed 42; set `GPVAE_EPOCHS` for another number of epochs, e.g. `GPVAE_EPOCHS=500`):
 
 ```bash
 # Linux / macOS / Git Bash
-GPVAE_VIDEO=c1_descending_t1_v2 uv run python -m gpvae_endo run configs/hpc.py
+GPVAE_VIDEO=c1_descending_t1_v2 uv run python -m gpvae_endo run configs/experiment.py
 ```
 
 ```powershell
 # Windows PowerShell
 $env:GPVAE_VIDEO = "c1_descending_t1_v2"
-uv run python -m gpvae_endo run configs/hpc.py
+uv run python -m gpvae_endo run configs/experiment.py
 ```
 
 - To run only some models or encoders, set `GPVAE_MODELS` and/or `GPVAE_ENCODERS`, comma-separated. For
   example, `GPVAE_ENCODERS=EndoVAEEnc` runs the 3 models that need no restricted weights.
-- Each model trains for up to 300 epochs, which took between 5 minutes and 1.5 hours per model on a
-  cluster GPU (A100 or P100), depending on the video and the encoder.
+- Each model trains for up to 300 epochs, which took between 5 minutes and 1.5 hours per model on an
+  A100 or P100 GPU, depending on the video and the encoder.
 - The trained models are saved in `Saved_Models/`. To evaluate them again without training, run the same
-  command with `configs/pretrained.py` instead of `configs/hpc.py`.
+  command with `configs/pretrained.py` instead of `configs/experiment.py`.
 - Other settings files and options are described in [Running](#9-running).
-- To run many videos in parallel on a cluster, see [Running on a Slurm cluster](#11-running-on-a-slurm-cluster).
 
 The run writes the outputs described in [Outputs](#10-outputs):
 
@@ -121,8 +135,7 @@ The run writes the outputs described in [Outputs](#10-outputs):
 8. [Installation](#8-installation)
 9. [Running](#9-running)
 10. [Outputs](#10-outputs)
-11. [Running on a Slurm cluster](#11-running-on-a-slurm-cluster)
-12. [Tests](#12-tests)
+11. [Tests](#11-tests)
 
 ---
 
@@ -338,8 +351,9 @@ epoch is kept. Afterwards every training frame is encoded once more. The means b
 at epoch boundaries: weights (loaded back *into* the existing modules, because the optimiser holds
 references to them), optimiser, both LR schedulers, early-stopping tracker, best-epoch snapshot, loss
 histories and every RNG state. A save happens every `--checkpoint-interval` seconds (900) and when the
-next epoch would end within `--deadline-margin` seconds of `SLURM_JOB_END_TIME`. In the second case the
-process exits with code **85** ("saved, resubmit me"). A resumed run is bit-identical to an uninterrupted
+next epoch would end within `--deadline-margin` seconds of the job's time limit (read from
+`SLURM_JOB_END_TIME` when the run is a Slurm job; without it there is no time limit). In the second case the
+process exits with code **85** ("saved, run me again"). A resumed run is bit-identical to an uninterrupted
 one. Writes are atomic. Resuming refuses a checkpoint whose settings fingerprint differs from the current
 run.
 
@@ -405,13 +419,12 @@ gpvae_endo/                    the package
   utils/                       device check, seeding/RNG state, Tee logging, atomic writes
 config_endo.py                 base settings
 configs/config_c*.py           one settings file per C3VD video
-configs/hpc.py                 cluster settings: config_endo.py + 300 epochs, video/models/encoders/seed
-                               per job from GPVAE_* environment variables
-configs/pretrained.py          configs/hpc.py, but loads the models in Saved_Models/ (evaluate again, no training)
+configs/experiment.py          run settings: config_endo.py + 300 epochs, video/models/encoders/seed
+                               from GPVAE_* environment variables
+configs/pretrained.py          configs/experiment.py, but loads the models in Saved_Models/ (evaluate again, no training)
 Latent_Space_Discovery.py      alternative entry point; wraps gpvae_endo.pipeline.run
 scripts/                       make_npz.py, prepare_dataset.py, parse_experiment_summaries.py,
                                utils/ (one-off analysis and plotting scripts)
-slurm/                         job scripts, job-list generator, result collector, runbook
 tests/                         pytest suite
 ```
 
@@ -473,7 +486,7 @@ uv run python Latent_Space_Discovery.py --config configs/<file>.py     # alterna
 |---|---|---|
 | `--checkpoint` | off | Save training state and resume from `Saved_Models/<model>.ckpt.pt` |
 | `--checkpoint-interval S` | 900 | Seconds between checkpoints |
-| `--deadline-margin S` | 600 | Stop and exit 85 this many seconds before `SLURM_JOB_END_TIME` |
+| `--deadline-margin S` | 600 | Stop and exit 85 this many seconds before the job's time limit (`SLURM_JOB_END_TIME`, if set) |
 | `--stop-after-epochs N` | — | Testing: save and exit 85 after N epochs |
 
 Exit codes: 0 = done, 85 = checkpoint saved (run again to continue), 1 = no GPU, other = error.
@@ -503,30 +516,11 @@ All outputs are written relative to the working directory.
 | `Debug/<video>/` | Comparison images and the side-by-side MP4 |
 | `Recon/<video>/Frames/` | Every reconstructed frame as a PNG (`C:/Endo/Recon/` when `is_on_HPC = False`) |
 
-`scripts/parse_experiment_summaries.py` and `slurm/collect_results.py` turn the summary tables into CSV.
+`scripts/parse_experiment_summaries.py` turns the summary tables into CSV.
 
 ---
 
-## 11. Running on a Slurm cluster
-
-The runbook is [`slurm/README.md`](slurm/README.md). In short:
-
-- `slurm/prepare.slurm` builds NPZ files with `scripts/make_npz.py`.
-- `slurm/make_job_list.py` writes one line per (video, model, encoder).
-- `slurm/train.slurm` runs one line per array task, using `configs/hpc.py` with `--checkpoint
-  --deadline-margin 1800`. On exit 85 it requeues itself. When the run is evaluated it writes `DONE` and
-  deletes checkpoints, models and per-frame PNGs to stay within the scratch quota (`KEEP_MODELS=1` and
-  `KEEP_FRAMES=1` keep them).
-- `slurm/collect_results.py` gathers the summary rows.
-
-```bash
-$GPVAE_ENV/bin/python slurm/make_job_list.py kvasir
-sbatch --account=$ACC --array=0-80%4 --export=$EXP,JOBS=slurm/jobs/kvasir.txt slurm/train.slurm
-```
-
----
-
-## 12. Tests
+## 11. Tests
 
 ```bash
 uv run pytest -m "not slow"    # ~2 min on a CPU
@@ -540,4 +534,4 @@ uv run pytest                  # + the two ViT cases (needs dinov2_base.pth, ~6 
 | `tests/test_hpa_kl.py` | The closed-form HPA block KL against a per-dimension reference computation |
 | `tests/test_metrics.py` | Denormalisation and metrics |
 | `tests/test_device.py` | The missing-GPU check and `GPVAE_ALLOW_CPU` |
-| `tests/test_hpc.py` | `configs/hpc.py`, job-list and result scripts, dry runs of the Slurm scripts (needs bash) |
+| `tests/test_experiment_config.py` | `configs/experiment.py`: defaults, environment variables, rejected typos |

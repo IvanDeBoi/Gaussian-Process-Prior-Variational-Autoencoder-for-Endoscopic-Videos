@@ -1,4 +1,4 @@
-"""Settings for the cluster runs (slurm/train.slurm): config_endo.py, with a few values set per job.
+"""Settings for one experiment run: config_endo.py, with a few values set from environment variables.
 
 Everything is taken from ``config_endo.py`` (its ``is_on_HPC`` block: batch 64, latent 256, LPIPS at 256 px,
 VAE/HPA/SPA x EndoVAEEnc/GastroEnc/GaLoRaEnc with EndoVAEDec), then these values are replaced:
@@ -11,11 +11,9 @@ VAE/HPA/SPA x EndoVAEEnc/GastroEnc/GaLoRaEnc with EndoVAEDec), then these values
     SEED               <- GPVAE_SEED      (default 42, as in config_endo.py)
     EPOCHS             <- GPVAE_EPOCHS    (default 300; e.g. 500 for longer runs, 3 for a smoke test)
 
-On the cluster you never run this file yourself: you submit slurm/train.slurm with sbatch (slurm/README.md),
-and each job sets these variables for its one (video, model, encoder, seed). Only for a test on a laptop
-with a GPU (Git Bash):
+Example (Linux / macOS / Git Bash; see the README for PowerShell):
 
-    GPVAE_VIDEO=c1_descending_t1_v2 GPVAE_MODELS=VAE GPVAE_ENCODERS=EndoVAEEnc uv run python -m gpvae_endo run configs/hpc.py
+    GPVAE_VIDEO=c1_descending_t1_v2 GPVAE_MODELS=VAE GPVAE_ENCODERS=EndoVAEEnc uv run python -m gpvae_endo run configs/experiment.py
 
 Values the model code reads from config_endo.py itself (loss weights, warm-up, ramp, LoRA, early stopping; see
 the README) are not changed here, so they are the same for every run.
@@ -27,7 +25,7 @@ with open(_BASE, encoding="utf-8") as _f:
     exec(compile(_f.read(), _os.path.abspath(_BASE), "exec"))
 
 if not is_on_HPC:  # noqa: F821 (defined by config_endo.py)
-    raise ValueError("configs/hpc.py expects is_on_HPC = True in config_endo.py")
+    raise ValueError("configs/experiment.py expects is_on_HPC = True in config_endo.py")
 
 
 def _env_list(name, default):
@@ -38,7 +36,7 @@ def _env_list(name, default):
 try:
     SUBSTRING_FILTER = _os.environ["GPVAE_VIDEO"]
 except KeyError:
-    raise KeyError("configs/hpc.py: set GPVAE_VIDEO to the video name (the NPZ file name before ' 336 X')") from None
+    raise KeyError("configs/experiment.py: set GPVAE_VIDEO to the video name (the NPZ file name before ' 336 X')") from None
 FOLDER_DATA = _os.environ.get("GPVAE_DATA_DIR", "Data/")
 IMG_SRC_FOLDER = PREFIX + "C3VDv2/" + SUBSTRING_FILTER  # noqa: F821 (only used by data preparation)
 
@@ -56,4 +54,4 @@ for _m in MODELS:
     _d = _DECODER_OF.get(_m, "EndoVAEDec")
     for _e in ENCODERS:
         if (_e, _d) not in ALLOWED_PAIRS_PER_MODEL.get(_m, set()):  # noqa: F821
-            raise ValueError(f"configs/hpc.py: {_m} + {_e} + {_d} is not in ALLOWED_PAIRS_PER_MODEL")
+            raise ValueError(f"configs/experiment.py: {_m} + {_e} + {_d} is not in ALLOWED_PAIRS_PER_MODEL")

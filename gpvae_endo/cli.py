@@ -2,7 +2,7 @@
 
     python -m gpvae_endo run                              # settings from config_endo.py
     python -m gpvae_endo run configs/config_c1_descending_t1_v2.py
-    python -m gpvae_endo run --config configs/<file>.py --checkpoint     # on a cluster
+    python -m gpvae_endo run --config configs/<file>.py --checkpoint     # with checkpoint/resume
 
 Exit codes: 0 = finished; 85 = checkpoint saved because the job's time is nearly up, submit the job again
 to continue (only with ``--checkpoint``); 1 = no GPU (set ``GPVAE_ALLOW_CPU=1`` to run on the CPU anyway);

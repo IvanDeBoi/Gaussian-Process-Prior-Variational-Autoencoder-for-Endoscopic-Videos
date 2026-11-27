@@ -1,8 +1,8 @@
 """Checkpoint and resume for training (VAE, GPVAE_Casale, GPVAE_HPA, GPVAE_SPA and MSVQ_VAE).
 
-Why: a cluster job has a wall-time limit (24 h on CalcUA). Without checkpoints a run that does not finish
-in time is lost. With them, training saves its full state at epoch boundaries and the next job continues
-exactly where the previous one stopped.
+Why: a batch job has a wall-time limit, and a long run can be interrupted. Without checkpoints a run that
+does not finish is lost. With them, training saves its full state at epoch boundaries and the next run
+continues exactly where the previous one stopped.
 
 How it is used (see :func:`gpvae_endo.pipeline._train_and_evaluate`)::
 
